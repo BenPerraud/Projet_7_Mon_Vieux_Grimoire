@@ -1,0 +1,66 @@
+const Book = require("../models/Book")
+const fs = require("fs")
+
+
+exports.createBook = (req, res) => {
+    const bookObject = JSON.parse(req.body.book)
+    const book = new Book ({
+        userId: req.auth.userId,
+        title: bookObject.title,
+        author: bookObject.author,
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+        year: bookObject.year,
+        genre: bookObject.genre,
+        ratings: [{
+            userId: req.auth.userId,
+            grade: bookObject.ratings[0].grade
+        }],
+        averageRating: bookObject.ratings[0].grade
+    })
+    book.save()
+        .then(() => res.status(201).json({ message: "Livre ajouté"}))
+        .catch(error => res.status(400).json({ error }))
+}
+
+exports.findAllBook = (req, res) => {
+    Book.find()
+        .then(books => res.status(200).json(books))
+        .catch(error => res.status(400).json({ error }))    
+}
+
+exports.findOneBook = (req, res) => {
+    Book.findOne({ _id: req.params.id })
+        .then(book => res.status(201).json(book))
+        .catch(error => res.status(400).json({ error }))
+}
+
+exports.modifyBook = (req, res) => {
+    const bookObject = JSON.parse(req.body.book)     
+    Book.updateOne({ _id: req.params.id }, {
+        userId: req.auth.userId,
+        title: bookObject.title,
+        author: bookObject.author,
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+        year: bookObject.year,
+        genre: bookObject.genre,
+        _id: req.params.id })
+        .then(() => res.status(200).json({ message: "Livre modifié" }))
+        .catch(error => res.status(400).json({ error }))
+}
+
+exports.deleteBook = (req, res) => {
+    Book.findOne({ _id: req.params.id })
+        .then(book => {
+            if (book.userId != req.auth.userId) {
+                res.status(401).json({ message: "Not authorized"})
+            } else {
+                const filename = book.imageUrl.split("/images/")[1]
+                fs.unlink(`images/${filename}`, () => {
+                    Book.deleteOne({ _id: req.params.id })
+                        .then(() => res.status(200).json({ message: "Livre supprimé"}))
+                        .catch(error => res.status(401).json({ error }))
+                })
+            }
+        })
+        .catch( error => res.status(500).json({ error }))
+}
