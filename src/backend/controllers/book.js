@@ -4,7 +4,6 @@ const fs = require("fs")
 
 exports.createBook = (req, res) => {
     const bookObject = JSON.parse(req.body.book)
-
     const book = new Book ({
         userId: req.auth.userId,
         title: bookObject.title,
@@ -15,25 +14,40 @@ exports.createBook = (req, res) => {
         ratings: {
             userId: req.auth.userId,
             grade: bookObject.ratings[0].grade
-        }
+        },
+        averageRating: 0
     })
     book.save()
         .then(() => res.status(201).json({ message: "Livre ajouté"}))
         .catch(error => res.status(400).json({ error }))
 }
 
+
 exports.rateBook = (req, res) => {
-    Book.findOneAndUpdate(
-        { _id: req.params.id }, 
-        { $push: {ratings: {
-            userId: req.auth.userId,
-            grade: req.body.rating
-        }}},
-        {returnDocument:"after"}
-    )
-        .then((book) => res.status(200).json(book))
+    Book.findOne({ _id: req.params.id })
+        .then(book => {
+            const ratingsNbre = book.ratings.length
+            let sum = 0
+            for (let i=0; i < book.ratings.length; i++) {
+                sum += book.ratings[i].grade
+            }
+            const newAverageRating = ((sum + req.body.rating) / (ratingsNbre+1)).toFixed(2)
+            Book.findOneAndUpdate(
+                { _id: req.params.id }, 
+                { $push: {ratings: {
+                    userId: req.auth.userId,
+                    grade: req.body.rating
+                }},
+                averageRating: newAverageRating},
+                {returnDocument:"after"}
+            )
+                .then((book) => res.status(200).json(book))
+                .catch(error => res.status(400).json({ error }))
+        })
         .catch(error => res.status(400).json({ error }))
 }
+    
+    
 
 exports.findAllBook = (req, res) => {
     Book.find()
