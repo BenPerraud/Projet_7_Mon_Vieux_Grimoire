@@ -1,10 +1,11 @@
 const express = require('express')
 const mongoose = require("mongoose")
 const { MongoClient, ServerApiVersion } = require('mongodb')
+require("dotenv").config({ path: './.env'})
 
 
 /* Connexion à MongoDB */
-const uri = "mongodb+srv://benjaminperraud:TBB71NbepTThxZt8@cluster0.drndrtp.mongodb.net/?retryWrites=true&w=majority"
+const uri = process.env.MONGO_URI
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -26,7 +27,7 @@ async function run() {
   }
 }
 run().catch(console.dir)
-mongoose.connect("mongodb+srv://benjaminperraud:TBB71NbepTThxZt8@cluster0.drndrtp.mongodb.net/?retryWrites=true&w=majority")
+mongoose.connect(process.env.MONGO_URI)
 
 
 
@@ -41,6 +42,7 @@ app.use(express.json())
 app.use(helmet())
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
   next()
@@ -51,10 +53,4 @@ app.use(`/api/auth`, userRouter)
 app.use(`/api/books`, bookRouter)
 
 
-
-
-
-
 module.exports = app
-
-/* TBB71NbepTThxZt8 */

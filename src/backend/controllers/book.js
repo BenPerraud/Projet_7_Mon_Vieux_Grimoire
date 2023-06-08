@@ -4,6 +4,7 @@ const fs = require("fs")
 
 exports.createBook = (req, res) => {
     const bookObject = JSON.parse(req.body.book)
+
     const book = new Book ({
         userId: req.auth.userId,
         title: bookObject.title,
@@ -11,14 +12,26 @@ exports.createBook = (req, res) => {
         imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
         year: bookObject.year,
         genre: bookObject.genre,
-        ratings: [{
+        ratings: {
             userId: req.auth.userId,
             grade: bookObject.ratings[0].grade
-        }],
-        averageRating: bookObject.ratings[0].grade
+        }
     })
     book.save()
         .then(() => res.status(201).json({ message: "Livre ajouté"}))
+        .catch(error => res.status(400).json({ error }))
+}
+
+exports.rateBook = (req, res) => {
+    Book.findOneAndUpdate(
+        { _id: req.params.id }, 
+        { $push: {ratings: {
+            userId: req.auth.userId,
+            grade: req.body.rating
+        }}},
+        {returnDocument:"after"}
+    )
+        .then((book) => res.status(200).json(book))
         .catch(error => res.status(400).json({ error }))
 }
 
@@ -34,18 +47,29 @@ exports.findOneBook = (req, res) => {
         .catch(error => res.status(400).json({ error }))
 }
 
-exports.modifyBook = (req, res) => {
-    const bookObject = JSON.parse(req.body.book)     
-    Book.updateOne({ _id: req.params.id }, {
-        userId: req.auth.userId,
-        title: bookObject.title,
-        author: bookObject.author,
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
-        year: bookObject.year,
-        genre: bookObject.genre,
-        _id: req.params.id })
-        .then(() => res.status(200).json({ message: "Livre modifié" }))
-        .catch(error => res.status(400).json({ error }))
+exports.modifyBook = (req, res) => {   
+    if (req.file === undefined) {
+        Book.updateOne({ _id: req.params.id }, {
+            userId: req.auth.userId,
+            title: req.body.title,
+            author: req.body.author,
+            year: req.body.year,
+            genre: req.body.genre,
+            _id: req.params.id })
+            .then(() => res.status(200).json({ message: "Livre modifié sans modification de l'image" }))
+            .catch(error => res.status(400).json({ error }))
+    } else {
+        Book.updateOne({ _id: req.params.id }, {
+            userId: req.auth.userId,
+            title: req.body.title,
+            author: req.body.author,
+            imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+            year: req.body.year,
+            genre: req.body.genre,
+            _id: req.params.id })
+            .then(() => res.status(200).json({ message: "Livre modifié avec image modifiée" }))
+            .catch(error => res.status(400).json({ error }))
+    }    
 }
 
 exports.deleteBook = (req, res) => {
@@ -64,3 +88,4 @@ exports.deleteBook = (req, res) => {
         })
         .catch( error => res.status(500).json({ error }))
 }
+
