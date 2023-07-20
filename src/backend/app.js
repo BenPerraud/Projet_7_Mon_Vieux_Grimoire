@@ -49,10 +49,10 @@ app.use((req, res, next) => {
 })
 
 app.use("/images", express.static(path.join(__dirname, "images")))
+app.use("/processed_images", express.static(path.join(__dirname, "processed_images")))
 app.use(`/api/auth`, userRouter)
 app.use(`/api/books`, bookRouter)
 
 
 module.exports = app
 
-/* RESTE A FAIRE 3 MEILLLEURS LIVRES + GREEN CODE*/

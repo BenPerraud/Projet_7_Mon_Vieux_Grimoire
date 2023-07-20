@@ -8,7 +8,7 @@ exports.createBook = (req, res) => {
         userId: req.auth.userId,
         title: bookObject.title,
         author: bookObject.author,
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+        imageUrl: `${req.protocol}://${req.get("host")}/processed_images/${req.file.filename}`,
         year: bookObject.year,
         genre: bookObject.genre,
         ratings: {
