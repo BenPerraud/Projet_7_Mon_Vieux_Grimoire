@@ -46,19 +46,29 @@ exports.rateBook = (req, res) => {
         })
         .catch(error => res.status(400).json({ error }))
 }
-    
-    
 
 exports.findAllBook = (req, res) => {
     Book.find()
         .then(books => res.status(200).json(books))
-        .catch(error => res.status(400).json({ error }))    
+        .catch(error => res.status(400).json({ error }))
 }
 
 exports.findOneBook = (req, res) => {
     Book.findOne({ _id: req.params.id })
         .then(book => res.status(201).json(book))
         .catch(error => res.status(400).json({ error }))
+}
+
+exports.findBestBook = (req, res) => {
+    function threeBestBooks (x) {
+        x.sort((a, b) => b.averageRating - a.averageRating)
+        const result = [x[0], x[1], x[2]]
+        return result
+    }
+
+    Book.find()
+        .then(books => res.status(200).json(threeBestBooks(books)))
+        .catch(error => res.status(400).json({ error }))    
 }
 
 exports.modifyBook = (req, res) => {   
@@ -102,4 +112,6 @@ exports.deleteBook = (req, res) => {
         })
         .catch( error => res.status(500).json({ error }))
 }
+
+
 
