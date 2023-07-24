@@ -8,7 +8,7 @@ exports.createBook = (req, res) => {
         userId: req.auth.userId,
         title: bookObject.title,
         author: bookObject.author,
-        imageUrl: `${req.protocol}://${req.get("host")}/processed_images/${req.file.filename}`,
+        imageUrl: req.sharp.imageUrl,
         year: bookObject.year,
         genre: bookObject.genre,
         ratings: {
@@ -87,7 +87,7 @@ exports.modifyBook = (req, res) => {
             userId: req.auth.userId,
             title: req.body.title,
             author: req.body.author,
-            imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+            imageUrl: req.sharp.imageUrl,
             year: req.body.year,
             genre: req.body.genre,
             _id: req.params.id })
